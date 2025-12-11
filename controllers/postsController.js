@@ -3,25 +3,22 @@ const { ObjectId } = require("mongodb");
 exports.createPost = async (req, res) => {
   try {
     const db = req.app.locals.db;
-    
-    // 1. Get the text data (title, description, etc.)
-    // When using Multer, req.body contains the text fields
     const postData = req.body; 
 
-    // 2. Handle the Image File
+    // --- FIX: CONVERT COORDINATES TO NUMBERS ---
+    if (postData.latitude) postData.latitude = parseFloat(postData.latitude);
+    if (postData.longitude) postData.longitude = parseFloat(postData.longitude);
+    // -------------------------------------------
+
     if (req.file) {
-      // If Multer saved a file, save the path to MongoDB
-      // We replace backslashes (Windows) with forward slashes (Web standard)
       postData.imageUrl = req.file.path.replace(/\\/g, "/"); 
     } else {
-      // If no image was picked, save an empty string
       postData.imageUrl = "";
     }
 
-    // 3. Save to Database
     await db.collection("posts").insertOne(postData);
     
-    console.log("✅ Post created:", postData.itemName);
+    console.log("✅ Post created at:", postData.latitude, postData.longitude);
     res.json({ message: "Post created", post: postData });
 
   } catch (e) {
